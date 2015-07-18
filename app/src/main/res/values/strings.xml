@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Jul11 Asa</string>
+
+    <string name="game_name">SkyFall</string>
+    <string name="game_desc">Asteroids are falling out of the sky! Use your MagnaBeam to divert them and keep them from hitting any of your cities. How long can you survive the onslaught? (bonus points for destoying asteroids with other asteroids) </string>
+    <string name="start_game">START GAME</string>
+
+    <string name="boston">Boston</string>
+    <string name="newyork">NYC</string>
+    <string name="dc">DC</string>
+
+    <string name="score">Score: </string>
+    <string name="level">Level: </string>
+    <string name="game_over">A CITY HAS BEEN DESTROYED - GAME OVER</string>
+    <string name="game_won">CONGRATULATIONS - YOU WON!!!</string>
+    <string name="final_score">FINAL SCORE: </string>
+    <string name="action_settings">Settings</string>
+
+    <string-array name="people_array">
+        <item>Abdoulaye</item>
+        <item>Alrick</item>
+        <item>Asa</item>
+        <item>David</item>
+        <item>Deepali</item>
+        <item>Jaxon</item>
+        <item>Jeffrey</item>
+        <item>Joey</item>
+        <item>Keenen</item>
+        <item>Mark</item>
+    </string-array>
+</resources>
