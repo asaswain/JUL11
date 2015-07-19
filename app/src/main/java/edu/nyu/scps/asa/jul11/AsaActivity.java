@@ -10,11 +10,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-// layout class for game instructions - calls AsaActivity to start game
+// layout class to display game title and instructions - calls AsaActivity to start actual game
 
 public class AsaActivity extends AppCompatActivity {
-
-    final Handler myHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +20,7 @@ public class AsaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_title);
     }
 
+    // start actual game
     public void StartGame(View v) {
         Intent intent = new Intent(AsaActivity.this, GameActivity.class);
 

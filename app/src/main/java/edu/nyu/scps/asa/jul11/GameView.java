@@ -21,7 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Features I didn't have time to implement:
- *
+ * <p/>
  * A timer to prevent how long you can use the magnetron continuously
  * Explosions when the rocks are destroyed or hit the ground
  * Explosions when a city is destroyed
@@ -43,43 +43,47 @@ public class GameView extends View {
     private Paint touchPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
+    // variables that control location of cities
     private float horizon;
     private final int cityCount = 3;
     private final int citySize = 20;
     private PointF[] cityLocations = new PointF[cityCount];
     private String cityNames[] = new String[]{
-        getResources().getString(R.string.boston),
-        getResources().getString(R.string.newyork),
-        getResources().getString(R.string.dc)
+            getResources().getString(R.string.boston),
+            getResources().getString(R.string.newyork),
+            getResources().getString(R.string.dc)
     };
 
-    private int score;
-    private int scoreTimer;
-    private final int scoreInterval = 10; // update score every second
-
-    private int rockTimer;
-    private final int rockInterval = 20; // add new rock every 20 seconds - gameLevel (which increases every 10 seconds)
-
-    private int gameLevel;
-    private boolean gameOver;
-    private boolean gameWon;
-
+    // variables that control when speed of new rocks is incremented
     private int currentSpeed;
     private int speedTimer;
     private final float speedFactor = 1.5f;
     private final int speedInterval = 100; // increase rock speed by 150% every 10 seconds
 
+    // variables that control when score gets incremented
+    private int score;
+    private int scoreTimer;
+    private final int scoreInterval = 10; // update score every second
+
+    // variables that control when rocks are created and how big they are
+    private final float rockRadius = 16.0f;
+    private int rockTimer;
+    private final int rockInterval = 20; // add new rock every 20 seconds - gameLevel (which increases every 10 seconds)
+
+    // variables that control game level anbd if game is won or lost
+    private int gameLevel;
+    private boolean gameOver;
+    private boolean gameWon;
+
+    // variables that control if user is touching screen
     private boolean touchActive;
     private final float touchWidth = 64.0f;
-
-    private final float rockRadius = 16.0f;
-
 
 
     public GameView(Context context) {
         super(context);
 
-        // Java doesn't like it if I define the final dentist varibale in initializeView
+        // Java doesn't like it if I define the final density varibale in initializeView, so I'm doing it here instead
         Resources resources = getResources();
         DisplayMetrics displayMetrics = resources.getDisplayMetrics();
         density = displayMetrics.density;
@@ -91,7 +95,7 @@ public class GameView extends View {
     public GameView(Context context, AttributeSet attributeSet) {
         super(context, attributeSet);
 
-        // Java doesn't like it if I define the final dentist varibale in initializeView
+        // Java doesn't like it if I define the final density varibale in initializeView, so I'm doing it here instead
         Resources resources = getResources();
         DisplayMetrics displayMetrics = resources.getDisplayMetrics();
         density = displayMetrics.density;
@@ -116,6 +120,7 @@ public class GameView extends View {
             setLayerType(LAYER_TYPE_SOFTWARE, paint);
         }
 
+        // check if user is touching screen, if so display red cicle (to show reopulsor beam)
         setOnTouchListener(new View.OnTouchListener() {
 
             @Override
@@ -153,14 +158,16 @@ public class GameView extends View {
             }
         });
 
+        // set variables when starting game
         initializeGame();
 
+        // run infinite game loop
         Runnable runnable = new Runnable() {
 
             //This method is run by rockList thread that is not the UI thread.
             @Override
             public void run() {
-                for (;;) {  //infinite loop
+                for (; ; ) {
 
                     // increment score, speed and create rock counters
                     incrementCounters();
@@ -169,8 +176,8 @@ public class GameView extends View {
                         gameWon = true;
                     } else {
 
-                        // create rocks
-                        // don't try to create rocks until we're drawn the screen
+                        // check if we should create a new rock
+                        // (don't try to create rocks until we're drawn the screen)
                         if (getWidth() > 0) {
                             if (rockTimer >= rockInterval - gameLevel) {
                                 createRock();
@@ -178,23 +185,20 @@ public class GameView extends View {
                             }
                         }
 
-                        // move rocks
+                        // move all existing rocks in list
                         for (RockView rock : rockList) {
                             rock.dragTowards(touchPoint, touchWidth);
                         }
 
-                        // check for collision with city -> end of game
-
+                        // check for rock collision with city -> end of game
                         for (RockView rock : rockList) {
                             if (isRockTouchingCity(rock)) {
                                 gameOver = true;
                             }
                         }
 
-                        // check for collision with ground -> delete rock
-
+                        // check for rock collision with ground -> delete rock
                         CopyOnWriteArrayList<RockView> tmp1 = new CopyOnWriteArrayList<RockView>();
-
                         Iterator<RockView> rockIterator = rockList.iterator();
                         while (rockIterator.hasNext()) {
                             RockView rock = rockIterator.next();
@@ -202,11 +206,9 @@ public class GameView extends View {
                                 tmp1.add(rock);
                             }
                         }
-
                         rockList.removeAll(tmp1);
 
-                        // check for collision with other rocks -> delete both rocks
-
+                        // check for rock collision with other rocks -> delete both rocks
                         CopyOnWriteArrayList<RockView> tmp2 = new CopyOnWriteArrayList<RockView>();
 
                         Iterator<RockView> rockIterator1 = rockList.iterator();
@@ -228,12 +230,12 @@ public class GameView extends View {
 
                         // remove rocks marked for destruction
                         rockList.removeAll(tmp2);
-
                     }
 
-                    //Call onDraw.
+                    //Call onDraw to redraw screen
                     postInvalidate();
 
+                    // check if game is over or won, else sleep and then start loop over again
                     if (gameOver || gameWon) {
                         // pause for 7 seconds to display toast
                         try {
@@ -241,8 +243,8 @@ public class GameView extends View {
                         } catch (InterruptedException interruptedException) {
                         }
 
-                        gameOver = false;
-                        gameWon = false;
+                        // reset game
+                        resetGame();
                     } else {
 
                         //Sleep for 1/10 of a second.
@@ -259,12 +261,10 @@ public class GameView extends View {
         thread.start();   //The thread will execute the run method of the Runnable object.
     }
 
+    // when laying out screen, set city locations array
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-
-        // set to center
-        //touchPoint = new PointF(getWidth() / (density * 2), getHeight() / (density * 2));
 
         horizon = (getHeight() - 100) / density;
 
@@ -274,7 +274,7 @@ public class GameView extends View {
         loc[1] = getWidth() / (density * 2);
         loc[2] = (getWidth() * 3) / (density * 4);
 
-        for (int i = 0; i < cityCount; ++i){
+        for (int i = 0; i < cityCount; ++i) {
             cityLocations[i] = new PointF(loc[i], horizon);
         }
     }
@@ -284,10 +284,10 @@ public class GameView extends View {
 
         // generate x,y coordinates
 
-        RockView newRock = new RockView(getWidth(),currentSpeed, gameLevel);
+        RockView newRock = new RockView(getWidth(), currentSpeed, gameLevel-1);
         newRock.setCenter(getRandCoordinate());
 
-        // assign target
+        // assign city target deending on what third of the screen the rock was created in
 
         float maxWidth = getWidth() / density;
         float boundry1 = maxWidth / 3;
@@ -304,7 +304,7 @@ public class GameView extends View {
 
         newRock.setTarget(cityLocations[target]);
 
-        // add to array of rocks
+        // add rock to array of rocks
         rockList.add(newRock);
 
     }
@@ -326,7 +326,7 @@ public class GameView extends View {
         return score;
     }
 
-    // draw game screen
+    // draw the game screen
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -334,26 +334,20 @@ public class GameView extends View {
         if (gameOver) {
             // end game - loss
             gameOverDialog();
-
-            // reset game
-            resetGame();
-        }
-
-        if (gameWon) {
+        } else if (gameWon) {
             // end game - win
             gameWonDialog();
-
-            // reset game
-            resetGame();
         }
 
         //Convert dp to pixels by multiplying times density.
         canvas.scale(density, density);
 
+        // draw horizon
         paint.setColor(Color.GREEN);
         paint.setStyle(Paint.Style.FILL);
         canvas.drawRect(0, horizon, getWidth() / density, getHeight() / density, paint);
 
+        // draw cities
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.FILL);
         textPaint.setColor(Color.WHITE);
@@ -364,6 +358,7 @@ public class GameView extends View {
             canvas.drawText(cityNames[i], cityLocations[i].x - (citySize / 2) - 5, cityLocations[i].y - (citySize / 2) + 10, textPaint);
         }
 
+        // draw rocks
         for (RockView rock : rockList) {
             PointF center = rock.getCenter();
             String color = rock.getColor();
@@ -376,11 +371,11 @@ public class GameView extends View {
             canvas.drawCircle(center.x, center.y, rockRadius, paint);
         }
 
+        // draw MagnaBeam circle
         if (touchActive) {
             canvas.drawCircle(touchPoint.x, touchPoint.y, touchWidth, touchPaint);
         }
     }
-
 
     // check if a rock has collided with a city
     private boolean isRockTouchingCity(RockView targetRock) {
@@ -390,7 +385,7 @@ public class GameView extends View {
         for (int i = 0; i < cityCount; ++i) {
             double distance = targetRock.calcDistance(cityLocations[i]);
 
-            if (distance <= citySize*1.5) {
+            if (distance <= citySize * 1.5) {
                 isTouching = true;
             }
         }
@@ -398,7 +393,7 @@ public class GameView extends View {
         return isTouching;
     }
 
-    // check if a rock has collided with ground
+    // check if a rock has collided with the ground
     private boolean isRockTouchingGround(RockView targetRock) {
 
         boolean isTouching = false;
@@ -417,13 +412,14 @@ public class GameView extends View {
 
         double distance = rock1.calcDistance(rock2.getCenter());
 
-        if (distance <= rockRadius*1.5) {
+        if (distance <= rockRadius * 1.5) {
             isTouching = true;
         }
 
         return isTouching;
     }
 
+    // display Game Over dialog
     private void gameOverDialog() {
         Toast makeText;
         makeText = Toast.makeText(this.getContext(), getResources().getString(R.string.game_over), Toast.LENGTH_LONG);
@@ -432,6 +428,7 @@ public class GameView extends View {
         makeText.show();
     }
 
+    // display Game Won dialog
     private void gameWonDialog() {
         Toast makeText;
         makeText = Toast.makeText(this.getContext(), getResources().getString(R.string.game_won), Toast.LENGTH_LONG);
@@ -440,23 +437,27 @@ public class GameView extends View {
         makeText.show();
     }
 
+    // after game over or game won, reset game
     private void resetGame() {
         rockList.clear();
 
         initializeGame();
     }
 
+    // set counters to zero before startign a new game
     private void initializeGame() {
         score = 0;
         scoreTimer = 0;
         rockTimer = 0;
         touchActive = false;
         gameOver = false;
+        gameWon = false;
         currentSpeed = 1;
-        gameLevel = 0;
+        gameLevel = 1;
         speedTimer = 0;
     }
 
+    // increment Timer counters for score, speed, and creating rocks
     private void incrementCounters() {
         // update score by 5 every second
         ++scoreTimer;

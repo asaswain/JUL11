@@ -34,6 +34,7 @@ public class RockView {
 
     private static boolean repulsorActive = false;
 
+    //creator method
     public RockView(float width, float currentSpeed, int currentPower) {
         // generare a unique id to tell each rock apart
         ++idNbr;
@@ -46,14 +47,13 @@ public class RockView {
         color = colorList[currentPower % colorList.length];
     }
 
-
-
-    public void dragTowards(PointF beamPoint, float beamLength) {
+    // This method calculates the new x,y location of the rock
+    public void dragTowards(PointF touchPoint, float touchRadius) {
 
         boolean inArea;
 
-        double distance = Math.abs(calcDistance(beamPoint));
-        if ((distance < beamLength)) {
+        double distance = Math.abs(calcDistance(touchPoint));
+        if ((distance < touchRadius)) {
             //Log.d("distance", distance + "");
             inArea = true;
         } else {
@@ -68,8 +68,8 @@ public class RockView {
         if (repulsorActive && inArea) {
 
             force = new PointF(
-                    ((strength * (beamPoint.x - center.x)) * elasticity) + ((target.x - center.x) * gravity * speed),
-                    ((strength * (beamPoint.y - center.y)) * elasticity) + ((target.y - center.y) * gravity * speed)
+                    ((strength * (touchPoint.x - center.x)) * elasticity) + ((target.x - center.x) * gravity * speed),
+                    ((strength * (touchPoint.y - center.y)) * elasticity) + ((target.y - center.y) * gravity * speed)
             );
         } else {
             force = new PointF(
@@ -110,7 +110,7 @@ public class RockView {
         );
     }
 
-    //A setter and a getter.
+    // these are getters and setters for checking rock location, target location, and if user is touching screen
 
     public void setCenter(PointF center) {
         // make a new object to prevent user from referencing private center variable
@@ -153,6 +153,7 @@ public class RockView {
         return color;
     }
 
+    // equals method is used by GameView when checking to see if two rocks have hit each other
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
